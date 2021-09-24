@@ -151,9 +151,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     public void init(PeerEurekaNodes peerEurekaNodes) throws Exception {
         this.numberOfReplicationsLastMin.start();
         this.peerEurekaNodes = peerEurekaNodes;
-        initializedResponseCache();
-        scheduleRenewalThresholdUpdateTask();
-        initRemoteRegionRegistry();
+        initializedResponseCache();// 初始化响应缓存
+        scheduleRenewalThresholdUpdateTask();// 调度续约阈值更新任务
+        initRemoteRegionRegistry();// 初始化远程注册表
 
         try {
             Monitors.registerObject(this);

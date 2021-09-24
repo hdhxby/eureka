@@ -122,9 +122,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
         this.renewsLastMin = new MeasuredRate(1000 * 60 * 1);
 
-        this.deltaRetentionTimer.schedule(getDeltaRetentionTask(),
-                serverConfig.getDeltaRetentionTimerIntervalInMs(),
-                serverConfig.getDeltaRetentionTimerIntervalInMs());
+        this.deltaRetentionTimer.schedule(getDeltaRetentionTask(),// 增量保留任务
+                serverConfig.getDeltaRetentionTimerIntervalInMs(),// 增量保留任务间隔,30S
+                serverConfig.getDeltaRetentionTimerIntervalInMs());// 增量保留任务间隔,30S
     }
 
     @Override
@@ -1344,8 +1344,9 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
             public void run() {
                 Iterator<RecentlyChangedItem> it = recentlyChangedQueue.iterator();
                 while (it.hasNext()) {
+                    // 最后更新时间小于增量队列保留时间
                     if (it.next().getLastUpdateTime() <
-                            System.currentTimeMillis() - serverConfig.getRetentionTimeInMSInDeltaQueue()) {
+                            System.currentTimeMillis() - serverConfig.getRetentionTimeInMSInDeltaQueue()) {// 增量队列保留时间,180S
                         it.remove();
                     } else {
                         break;

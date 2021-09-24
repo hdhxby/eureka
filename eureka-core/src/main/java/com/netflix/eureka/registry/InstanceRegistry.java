@@ -72,6 +72,9 @@ public interface InstanceRegistry extends LeaseManager<InstanceInfo>, LookupServ
 
     void clearRegistry();
 
+    /**
+     * 初始化响应缓存
+     */
     void initializedResponseCache();
 
     ResponseCache getResponseCache();

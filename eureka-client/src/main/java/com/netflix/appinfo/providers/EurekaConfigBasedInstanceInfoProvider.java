@@ -47,8 +47,8 @@ public class EurekaConfigBasedInstanceInfoProvider implements Provider<InstanceI
         if (instanceInfo == null) {
             // Build the lease information to be passed to the server based on config
             LeaseInfo.Builder leaseInfoBuilder = LeaseInfo.Builder.newBuilder()
-                    .setRenewalIntervalInSecs(config.getLeaseRenewalIntervalInSeconds())
-                    .setDurationInSecs(config.getLeaseExpirationDurationInSeconds());
+                    .setRenewalIntervalInSecs(config.getLeaseRenewalIntervalInSeconds())// 续约间隔
+                    .setDurationInSecs(config.getLeaseExpirationDurationInSeconds());// 超时时间
 
             if (vipAddressResolver == null) {
                 vipAddressResolver = new Archaius1VipAddressResolver();

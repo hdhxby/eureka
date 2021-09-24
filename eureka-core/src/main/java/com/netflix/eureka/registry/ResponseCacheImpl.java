@@ -123,13 +123,13 @@ public class ResponseCacheImpl implements ResponseCache {
     ResponseCacheImpl(EurekaServerConfig serverConfig, ServerCodecs serverCodecs, AbstractInstanceRegistry registry) {
         this.serverConfig = serverConfig;
         this.serverCodecs = serverCodecs;
-        this.shouldUseReadOnlyResponseCache = serverConfig.shouldUseReadOnlyResponseCache();
+        this.shouldUseReadOnlyResponseCache = serverConfig.shouldUseReadOnlyResponseCache();// 使用只读缓存,true
         this.registry = registry;
 
-        long responseCacheUpdateIntervalMs = serverConfig.getResponseCacheUpdateIntervalMs();
+        long responseCacheUpdateIntervalMs = serverConfig.getResponseCacheUpdateIntervalMs();// 响应缓存更新间隔,30S
         this.readWriteCacheMap =
                 CacheBuilder.newBuilder().initialCapacity(serverConfig.getInitialCapacityOfResponseCache())
-                        .expireAfterWrite(serverConfig.getResponseCacheAutoExpirationInSeconds(), TimeUnit.SECONDS)
+                        .expireAfterWrite(serverConfig.getResponseCacheAutoExpirationInSeconds(), TimeUnit.SECONDS)// 响应缓存自动超时时间,180S
                         .removalListener(new RemovalListener<Key, Value>() {
                             @Override
                             public void onRemoval(RemovalNotification<Key, Value> notification) {

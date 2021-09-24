@@ -84,8 +84,9 @@ public class PeerEurekaNodes {
                 }
         );
         try {
+            // 解析url,更新节点
             updatePeerEurekaNodes(resolvePeerUrls());
-            Runnable peersUpdateTask = new Runnable() {
+            Runnable peersUpdateTask = new Runnable() {// 解析url,更新节点
                 @Override
                 public void run() {
                     try {
@@ -98,8 +99,8 @@ public class PeerEurekaNodes {
             };
             taskExecutor.scheduleWithFixedDelay(
                     peersUpdateTask,
-                    serverConfig.getPeerEurekaNodesUpdateIntervalMs(),
-                    serverConfig.getPeerEurekaNodesUpdateIntervalMs(),
+                    serverConfig.getPeerEurekaNodesUpdateIntervalMs(),// 集群节点更新间隔,60S
+                    serverConfig.getPeerEurekaNodesUpdateIntervalMs(),// 集群节点更新间隔,60S
                     TimeUnit.MILLISECONDS
             );
         } catch (Exception e) {
@@ -136,7 +137,7 @@ public class PeerEurekaNodes {
         int idx = 0;
         while (idx < replicaUrls.size()) {
             if (isThisMyUrl(replicaUrls.get(idx))) {
-                replicaUrls.remove(idx);
+                replicaUrls.remove(idx);// 移除自己
             } else {
                 idx++;
             }
@@ -156,10 +157,10 @@ public class PeerEurekaNodes {
             return;
         }
 
-        Set<String> toShutdown = new HashSet<>(peerEurekaNodeUrls);
-        toShutdown.removeAll(newPeerUrls);
-        Set<String> toAdd = new HashSet<>(newPeerUrls);
-        toAdd.removeAll(peerEurekaNodeUrls);
+        Set<String> toShutdown = new HashSet<>(peerEurekaNodeUrls);// 原有节点
+        toShutdown.removeAll(newPeerUrls);// 关闭节点移除新节点
+        Set<String> toAdd = new HashSet<>(newPeerUrls);// 新增节点
+        toAdd.removeAll(peerEurekaNodeUrls);// 从新节点集合移除原有节点
 
         if (toShutdown.isEmpty() && toAdd.isEmpty()) { // No change
             return;
@@ -168,14 +169,14 @@ public class PeerEurekaNodes {
         // Remove peers no long available
         List<PeerEurekaNode> newNodeList = new ArrayList<>(peerEurekaNodes);
 
-        if (!toShutdown.isEmpty()) {
+        if (!toShutdown.isEmpty()) {// 关闭节点不为空
             logger.info("Removing no longer available peer nodes {}", toShutdown);
             int i = 0;
             while (i < newNodeList.size()) {
                 PeerEurekaNode eurekaNode = newNodeList.get(i);
                 if (toShutdown.contains(eurekaNode.getServiceUrl())) {
-                    newNodeList.remove(i);
-                    eurekaNode.shutDown();
+                    newNodeList.remove(i);// 移除
+                    eurekaNode.shutDown();// 关闭
                 } else {
                     i++;
                 }
@@ -183,23 +184,31 @@ public class PeerEurekaNodes {
         }
 
         // Add new peers
-        if (!toAdd.isEmpty()) {
+        if (!toAdd.isEmpty()) {// 新增节点不为空
             logger.info("Adding new peer nodes {}", toAdd);
             for (String peerUrl : toAdd) {
+                // 新增节点,创建节点
                 newNodeList.add(createPeerEurekaNode(peerUrl));
             }
         }
-
+        // 新的集群节点
         this.peerEurekaNodes = newNodeList;
         this.peerEurekaNodeUrls = new HashSet<>(newPeerUrls);
     }
 
+    /**
+     * 新增节点
+     * @param peerEurekaNodeUrl
+     * @return
+     */
     protected PeerEurekaNode createPeerEurekaNode(String peerEurekaNodeUrl) {
+        // 创建客户端
         HttpReplicationClient replicationClient = JerseyReplicationClient.createReplicationClient(serverConfig, serverCodecs, peerEurekaNodeUrl);
         String targetHost = hostFromUrl(peerEurekaNodeUrl);
         if (targetHost == null) {
             targetHost = "host";
         }
+        // 集群节点
         return new PeerEurekaNode(registry, targetHost, peerEurekaNodeUrl, replicationClient, serverConfig);
     }
 
@@ -233,7 +242,7 @@ public class PeerEurekaNodes {
      */
     public boolean isThisMyUrl(String url) {
         final String myUrlConfigured = serverConfig.getMyUrl();
-        if (myUrlConfigured != null) {
+        if (myUrlConfigured != null) {// TODO 此处有问题
             return myUrlConfigured.equals(url);
         }
         return isInstanceURL(url, applicationInfoManager.getInfo());
