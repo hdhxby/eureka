@@ -126,10 +126,10 @@ public class ResponseCacheImpl implements ResponseCache {
         this.shouldUseReadOnlyResponseCache = serverConfig.shouldUseReadOnlyResponseCache();// 使用只读缓存,true
         this.registry = registry;
 
-        long responseCacheUpdateIntervalMs = serverConfig.getResponseCacheUpdateIntervalMs();// 响应缓存更新间隔,30S
+        long responseCacheUpdateIntervalMs = serverConfig.getResponseCacheUpdateIntervalMs();// 只读缓存更新间隔,30S
         this.readWriteCacheMap =
                 CacheBuilder.newBuilder().initialCapacity(serverConfig.getInitialCapacityOfResponseCache())
-                        .expireAfterWrite(serverConfig.getResponseCacheAutoExpirationInSeconds(), TimeUnit.SECONDS)// 响应缓存自动超时时间,180S
+                        .expireAfterWrite(serverConfig.getResponseCacheAutoExpirationInSeconds(), TimeUnit.SECONDS)// 读写缓存自动超时时间,180S
                         .removalListener(new RemovalListener<Key, Value>() {
                             @Override
                             public void onRemoval(RemovalNotification<Key, Value> notification) {
@@ -147,16 +147,16 @@ public class ResponseCacheImpl implements ResponseCache {
                                     Key cloneWithNoRegions = key.cloneWithoutRegions();
                                     regionSpecificKeys.put(cloneWithNoRegions, key);
                                 }
-                                Value value = generatePayload(key);
+                                Value value = generatePayload(key);// 生成数据
                                 return value;
                             }
                         });
 
-        if (shouldUseReadOnlyResponseCache) {
-            timer.schedule(getCacheUpdateTask(),
+        if (shouldUseReadOnlyResponseCache) {// 只读缓存可用
+            timer.schedule(getCacheUpdateTask(),// 更新只读缓存
                     new Date(((System.currentTimeMillis() / responseCacheUpdateIntervalMs) * responseCacheUpdateIntervalMs)
                             + responseCacheUpdateIntervalMs),
-                    responseCacheUpdateIntervalMs);
+                    responseCacheUpdateIntervalMs);// 只读缓存更新间隔,60S
         }
 
         try {
@@ -178,10 +178,10 @@ public class ResponseCacheImpl implements ResponseCache {
                     }
                     try {
                         CurrentRequestVersion.set(key.getVersion());
-                        Value cacheValue = readWriteCacheMap.get(key);
-                        Value currentCacheValue = readOnlyCacheMap.get(key);
-                        if (cacheValue != currentCacheValue) {
-                            readOnlyCacheMap.put(key, cacheValue);
+                        Value cacheValue = readWriteCacheMap.get(key);// 读写缓存
+                        Value currentCacheValue = readOnlyCacheMap.get(key);// 只读缓存
+                        if (cacheValue != currentCacheValue) {// 不一致
+                            readOnlyCacheMap.put(key, cacheValue);// 设置读写缓存的值
                         }
                     } catch (Throwable th) {
                         logger.error("Error while updating the client cache from response cache for key {}", key.toStringCompact(), th);
@@ -279,13 +279,13 @@ public class ResponseCacheImpl implements ResponseCache {
             logger.debug("Invalidating the response cache key : {} {} {} {}, {}",
                     key.getEntityType(), key.getName(), key.getVersion(), key.getType(), key.getEurekaAccept());
 
-            readWriteCacheMap.invalidate(key);
+            readWriteCacheMap.invalidate(key);// 作废读写缓存
             Collection<Key> keysWithRegions = regionSpecificKeys.get(key);
             if (null != keysWithRegions && !keysWithRegions.isEmpty()) {
                 for (Key keysWithRegion : keysWithRegions) {
                     logger.debug("Invalidating the response cache key : {} {} {} {} {}",
                             key.getEntityType(), key.getName(), key.getVersion(), key.getType(), key.getEurekaAccept());
-                    readWriteCacheMap.invalidate(keysWithRegion);
+                    readWriteCacheMap.invalidate(keysWithRegion);// 作废读写缓存
                 }
             }
         }
@@ -415,7 +415,7 @@ public class ResponseCacheImpl implements ResponseCache {
                 case Application:
                     boolean isRemoteRegionRequested = key.hasRegions();
 
-                    if (ALL_APPS.equals(key.getName())) {
+                    if (ALL_APPS.equals(key.getName())) {// 全量
                         if (isRemoteRegionRequested) {
                             tracer = serializeAllAppsWithRemoteRegionTimer.start();
                             payload = getPayLoad(key, registry.getApplicationsFromMultipleRegions(key.getRegions()));
@@ -423,7 +423,7 @@ public class ResponseCacheImpl implements ResponseCache {
                             tracer = serializeAllAppsTimer.start();
                             payload = getPayLoad(key, registry.getApplications());
                         }
-                    } else if (ALL_APPS_DELTA.equals(key.getName())) {
+                    } else if (ALL_APPS_DELTA.equals(key.getName())) {// 增量
                         if (isRemoteRegionRequested) {
                             tracer = serializeDeltaAppsWithRemoteRegionTimer.start();
                             versionDeltaWithRegions.incrementAndGet();

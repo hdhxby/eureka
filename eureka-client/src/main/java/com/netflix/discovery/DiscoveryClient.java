@@ -462,7 +462,7 @@ public class DiscoveryClient implements EurekaClient {
             this.preRegistrationHandler.beforeRegistration();
         }
 
-        if (clientConfig.shouldRegisterWithEureka() && clientConfig.shouldEnforceRegistrationAtInit()) {//可以注册 && 可以强制注册启动时
+        if (clientConfig.shouldRegisterWithEureka() && clientConfig.shouldEnforceRegistrationAtInit()) {//可以注册 && 可以强制注册初始化时
             try {
                 if (!register() ) {// 注册
                     throw new IllegalStateException("Registration error at startup. Invalid server response.");
@@ -1357,7 +1357,7 @@ public class DiscoveryClient implements EurekaClient {
                 @Override
                 public void notify(StatusChangeEvent statusChangeEvent) {
                     logger.info("Saw local status change event {}", statusChangeEvent);
-                    // 状态变更后,会触发服务注册
+                    // 状态变更后,会触发服务注册,Sring Cloud EurekaServiceRegistry 借此完成客户端的立即初始化,无需等到40S以后
                     instanceInfoReplicator.onDemandUpdate();
                 }
             };

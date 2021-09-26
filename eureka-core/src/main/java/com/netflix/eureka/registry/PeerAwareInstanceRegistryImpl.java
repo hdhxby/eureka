@@ -135,7 +135,7 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
     ) {
         super(serverConfig, clientConfig, serverCodecs);
         this.eurekaClient = eurekaClient;
-        this.numberOfReplicationsLastMin = new MeasuredRate(1000 * 60 * 1);
+        this.numberOfReplicationsLastMin = new MeasuredRate(1000 * 60 * 1);// 最后一分钟注册次数,每分钟重置一次,60S
         // We first check if the instance is STARTING or DOWN, then we check explicit overrides,
         // then we check the status of a potentially existing lease.
         this.instanceStatusOverrideRule = new FirstMatchWinsCompositeRule(new DownOrStartingRule(),
@@ -149,10 +149,10 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
     @Override
     public void init(PeerEurekaNodes peerEurekaNodes) throws Exception {
-        this.numberOfReplicationsLastMin.start();
+        this.numberOfReplicationsLastMin.start();// 最后一分钟注册次数,每分钟重置一次,60S
         this.peerEurekaNodes = peerEurekaNodes;
         initializedResponseCache();// 初始化响应缓存
-        scheduleRenewalThresholdUpdateTask();// 调度续约阈值更新任务
+        scheduleRenewalThresholdUpdateTask();// 调度续约阈值更新任务,15M
         initRemoteRegionRegistry();// 初始化远程注册表
 
         try {
@@ -197,10 +197,11 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
                                updateRenewalThreshold();
                            }
                        }, serverConfig.getRenewalThresholdUpdateIntervalMs(),
-                serverConfig.getRenewalThresholdUpdateIntervalMs());
+                serverConfig.getRenewalThresholdUpdateIntervalMs());// 续约阈值更新,15M
     }
 
     /**
+     * 从相邻节点同步注册表
      * Populates the registry information from a peer eureka node. This
      * operation fails over to other nodes until the list is exhausted if the
      * communication fails.
@@ -219,12 +220,12 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
                     break;
                 }
             }
-            Applications apps = eurekaClient.getApplications();
+            Applications apps = eurekaClient.getApplications();// 获取所有应用
             for (Application app : apps.getRegisteredApplications()) {
-                for (InstanceInfo instance : app.getInstances()) {
+                for (InstanceInfo instance : app.getInstances()) {// 应用实例
                     try {
-                        if (isRegisterable(instance)) {
-                            register(instance, instance.getLeaseInfo().getDurationInSecs(), true);
+                        if (isRegisterable(instance)) {// 可以注册
+                            register(instance, instance.getLeaseInfo().getDurationInSecs(), true);// 注册
                             count++;
                         }
                     } catch (Throwable t) {
@@ -479,11 +480,11 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
     @Override
     public boolean isLeaseExpirationEnabled() {
-        if (!isSelfPreservationModeEnabled()) {
+        if (!isSelfPreservationModeEnabled()) {// 自我保护是否打开
             // The self preservation mode is disabled, hence allowing the instances to expire.
             return true;
         }
-        return numberOfRenewsPerMinThreshold > 0 && getNumOfRenewsInLastMin() > numberOfRenewsPerMinThreshold;
+        return numberOfRenewsPerMinThreshold > 0 && getNumOfRenewsInLastMin() > numberOfRenewsPerMinThreshold;// 每分钟续约阈值 > 0 && 最后一分钟续约数 > 每分钟续约阈值
     }
 
     @com.netflix.servo.annotations.Monitor(name = METRIC_REGISTRY_PREFIX + "isLeaseExpirationEnabled", type = DataSourceType.GAUGE)

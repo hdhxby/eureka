@@ -53,7 +53,7 @@ class InstanceInfoReplicator implements Runnable {
 
         this.started = new AtomicBoolean(false);
         this.rateLimiter = new RateLimiter(TimeUnit.MINUTES);
-        this.replicationIntervalSeconds = replicationIntervalSeconds;
+        this.replicationIntervalSeconds = replicationIntervalSeconds;// 之后执行复制的时间,30S
         this.burstSize = burstSize;
 
         this.allowedRatePerMinute = 60 * this.burstSize / this.replicationIntervalSeconds;
@@ -63,7 +63,7 @@ class InstanceInfoReplicator implements Runnable {
     public void start(int initialDelayMs) {
         if (started.compareAndSet(false, true)) {
             instanceInfo.setIsDirty();  // for initial register
-            Future next = scheduler.schedule(this, initialDelayMs, TimeUnit.SECONDS);
+            Future next = scheduler.schedule(this, initialDelayMs, TimeUnit.SECONDS);// 第一次执行复制的时间,40S,坑
             scheduledPeriodicRef.set(next);
         }
     }
@@ -124,7 +124,7 @@ class InstanceInfoReplicator implements Runnable {
         } catch (Throwable t) {
             logger.warn("There was a problem with the instance info replicator", t);
         } finally {
-            Future next = scheduler.schedule(this, replicationIntervalSeconds, TimeUnit.SECONDS);
+            Future next = scheduler.schedule(this, replicationIntervalSeconds, TimeUnit.SECONDS);// 下一次执行调度的时间,40S
             scheduledPeriodicRef.set(next);
         }
     }

@@ -104,19 +104,19 @@ public class PeerEurekaNode {
         ReplicationTaskProcessor taskProcessor = new ReplicationTaskProcessor(targetHost, replicationClient);
         this.batchingDispatcher = TaskDispatchers.createBatchingTaskDispatcher(
                 batcherName,
-                config.getMaxElementsInPeerReplicationPool(),
-                batchSize,
-                config.getMaxThreadsForPeerReplication(),
-                maxBatchingDelayMs,
+                config.getMaxElementsInPeerReplicationPool(),// 批次最大节点数
+                batchSize,// 工作批次数
+                config.getMaxThreadsForPeerReplication(),// 批次最大时间
+                maxBatchingDelayMs,// 最大等待时间
                 serverUnavailableSleepTimeMs,
                 retrySleepTimeMs,
                 taskProcessor
         );
         this.nonBatchingDispatcher = TaskDispatchers.createNonBatchingTaskDispatcher(
                 targetHost,
-                config.getMaxElementsInStatusReplicationPool(),
-                config.getMaxThreadsForStatusReplication(),
-                maxBatchingDelayMs,
+                config.getMaxElementsInStatusReplicationPool(),// 批次最大节点数
+                config.getMaxThreadsForStatusReplication(),// 批次最大时间
+                maxBatchingDelayMs,// 最大等待时间
                 serverUnavailableSleepTimeMs,
                 retrySleepTimeMs,
                 taskProcessor

@@ -59,7 +59,7 @@ public class MeasuredRate {
                         logger.error("Cannot reset the Measured Rate", e);
                     }
                 }
-            }, sampleInterval, sampleInterval);
+            }, sampleInterval, sampleInterval);// 每分钟重置一次,60S
 
             isActive = true;
         }
