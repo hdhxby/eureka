@@ -1200,7 +1200,7 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
     }
 
     protected void updateRenewsPerMinThreshold() {
-        // 此处可能存在严重错误,如果客户端续约间隔与服务端期望的续约间隔不一致,可能导致续约阈值的错误
+        // 老版本存在硬编码错误,如果客户端续约时间不为30S,会引发逻辑错误
         this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews// 期待的客户端续约数
                 * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds())// 期待的客户端续约间隔,30S
                 * serverConfig.getRenewalPercentThreshold());// 续约阈值
